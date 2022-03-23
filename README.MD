@@ -11,6 +11,13 @@ docker run -d --name mongodb \
   -p 27017:27017 mongo:4.4.3
 ```
 
+### Run Redis for caching
+
+```
+docker run -d -v $PWD/conf:/usr/local/etc/redis --name redis -p 6379:6379 redis:6.0
+
+```
+
 ### Build the app image with
 
 ```
