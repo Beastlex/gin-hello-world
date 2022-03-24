@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"gin-hello-world/handlers"
 	"log"
@@ -26,6 +27,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -48,6 +50,7 @@ func init() {
 	}
 	log.Println("Connected to MongoDB")
 	collection = client.Database(os.Getenv("MONGO_DATABASE")).Collection("recipes")
+	collectionUsers := client.Database(os.Getenv("MONGO_DATABASE")).Collection("users")
 
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6380",
@@ -59,10 +62,34 @@ func init() {
 	fmt.Println("Redis status check: ", status)
 
 	recipesHandler = handlers.NewRecipesHandler(ctx, collection, redisClient)
-	authHandler = &handlers.AuthHandler{}
+	authHandler = handlers.NewAuthHandler(ctx, collectionUsers)
+}
+
+func createUsers() {
+	users := map[string]string{
+		"admin":      "fCRmh4Q2J7Rseqkz",
+		"packt":      "RE4zfHB35VPtTkbT",
+		"mlabouardy": "L3nSFRcZzNQ67bcc",
+	}
+	client, err := mongo.Connect(ctx,
+		options.Client().ApplyURI(os.Getenv("MONGO_URI")))
+	if err = client.Ping(context.TODO(),
+		readpref.Primary()); err != nil {
+		log.Fatal(err)
+	}
+	collection := client.Database(os.Getenv(
+		"MONGO_DATABASE")).Collection("users")
+	h := sha256.New()
+	for username, password := range users {
+		collection.InsertOne(ctx, bson.M{
+			"username": username,
+			"password": string(h.Sum([]byte(password))),
+		})
+	}
 }
 
 func main() {
+	// createUsers()
 	router := gin.Default()
 	router.GET("/recipes", recipesHandler.ListRecipesHandler)
 	router.POST("/signin", authHandler.SignInHandler)
