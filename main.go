@@ -36,6 +36,7 @@ var err error
 var client *mongo.Client
 var collection *mongo.Collection
 var recipesHandler *handlers.RecipesHandler
+var authHandler *handlers.AuthHandler
 
 func init() {
 	ctx = context.Background()
@@ -58,13 +59,21 @@ func init() {
 	fmt.Println("Redis status check: ", status)
 
 	recipesHandler = handlers.NewRecipesHandler(ctx, collection, redisClient)
+	authHandler = &handlers.AuthHandler{}
 }
 
 func main() {
 	router := gin.Default()
-	router.POST("/recipes", recipesHandler.NewRecipeHandler)
 	router.GET("/recipes", recipesHandler.ListRecipesHandler)
-	router.PUT("/recipes/:id", recipesHandler.UpdateRecipeHandler)
-	router.DELETE("/recipes/:id", recipesHandler.DeleteRecipeHandler)
+	router.POST("/signin", authHandler.SignInHandler)
+	router.POST("/refres", authHandler.RefreshHandler)
+
+	authorized := router.Group("/")
+	authorized.Use(authHandler.AuthMiddleware())
+	{
+		authorized.POST("/recipes", recipesHandler.NewRecipeHandler)
+		authorized.DELETE("/recipes/:id", recipesHandler.DeleteRecipeHandler)
+		authorized.PUT("/recipes/:id", recipesHandler.UpdateRecipeHandler)
+	}
 	router.Run()
 }
