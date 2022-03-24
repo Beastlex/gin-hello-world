@@ -57,32 +57,6 @@
         }
       }
     },
-    "/recipes/search": {
-      "get": {
-        "description": "Search recipes based on tags",
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "recipes"
-        ],
-        "operationId": "findRecipe",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "recipe tag",
-            "name": "tag",
-            "in": "query",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation"
-          }
-        }
-      }
-    },
     "/recipes/{id}": {
       "get": {
         "description": "Get one recipe",

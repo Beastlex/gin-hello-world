@@ -209,7 +209,7 @@ func (handler *RecipesHandler) GetOneRecipeHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, recipe)
 }
 
-// swagger:operation GET /recipes/search recipes findRecipe
+// swagger:ignore GET /recipes/search recipes findRecipe
 // Search recipes based on tags
 // ---
 // produces:
